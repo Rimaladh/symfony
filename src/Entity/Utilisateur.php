@@ -6,9 +6,10 @@ use App\Repository\UtilisateurRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
-class Utilisateur
+class Utilisateur implements UserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -26,6 +27,9 @@ class Utilisateur
 
     #[ORM\ManyToOne(inversedBy: 'utilisateur')]
     private ?Emprunt $historique_emprunts = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $motDePasse = null;
 
     
     
@@ -81,6 +85,34 @@ class Utilisateur
         $this->historique_emprunts = $historique_emprunts;
 
         return $this;
+    }
+
+    public function getMotDePasse(): ?string
+    {
+        return $this->motDePasse;
+    }
+
+    public function setMotDePasse(string $motDePasse): static
+    {
+        $this->motDePasse = $motDePasse;
+
+        return $this;
+    }
+
+    // Methods for UserInterface
+    public function getRoles(): array {
+        // Default role for users
+        return ['ROLE_USER'];
+    }
+
+    // Implementing getUserIdentifier method
+    public function getUserIdentifier(): string
+    {
+        return $this->email; // Return the email as the user identifier
+    }
+
+    public function eraseCredentials(): void {
+        // You can implement this if you need to clear temporary data
     }
 
     

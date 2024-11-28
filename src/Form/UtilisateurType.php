@@ -17,10 +17,8 @@ class UtilisateurType extends AbstractType
             ->add('nom')
             ->add('email')
             ->add('telephone')
-            ->add('historique_emprunts', EntityType::class, [
-                'class' => Emprunt::class,
-                'choice_label' => 'id',
-            ])
+            ->add('motDePasse')
+            
         ;
     }
 

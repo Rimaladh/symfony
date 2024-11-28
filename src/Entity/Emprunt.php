@@ -36,9 +36,16 @@ class Emprunt
     #[ORM\OneToMany(targetEntity: Utilisateur::class, mappedBy: 'historique_emprunts')]
     private Collection $utilisateur;
 
+    /**
+     * @var Collection<int, User>
+     */
+    #[ORM\OneToMany(targetEntity: User::class, mappedBy: 'historique_emprunts')]
+    private Collection $users;
+
     public function __construct()
     {
         $this->utilisateur = new ArrayCollection();
+        $this->users = new ArrayCollection();
     }
 
 
@@ -119,6 +126,36 @@ class Emprunt
             // set the owning side to null (unless already changed)
             if ($utilisateur->getHistoriqueEmprunts() === $this) {
                 $utilisateur->setHistoriqueEmprunts(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getUsers(): Collection
+    {
+        return $this->users;
+    }
+
+    public function addUser(User $user): static
+    {
+        if (!$this->users->contains($user)) {
+            $this->users->add($user);
+            $user->setHistoriqueEmprunts($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUser(User $user): static
+    {
+        if ($this->users->removeElement($user)) {
+            // set the owning side to null (unless already changed)
+            if ($user->getHistoriqueEmprunts() === $this) {
+                $user->setHistoriqueEmprunts(null);
             }
         }
 
