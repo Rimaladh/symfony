@@ -15,6 +15,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
+use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
+use App\Security\LoginAuthenticator;
 
 class RegistrationController extends AbstractController
 {
@@ -23,7 +25,13 @@ class RegistrationController extends AbstractController
     }
 
     #[Route('/register', name: 'app_register')]
-    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
+    public function register(
+        Request $request, 
+        UserPasswordHasherInterface $userPasswordHasher, 
+        EntityManagerInterface $entityManager,
+        UserAuthenticatorInterface $userAuthenticator,
+        LoginAuthenticator $authenticator
+        ): Response
     {
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
@@ -36,23 +44,33 @@ class RegistrationController extends AbstractController
             // encode the plain password
             $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
 
+            // Generate a unique token for email verification
+            $verificationToken = bin2hex(random_bytes(32)); // Generates a random 32-byte token
+            $user->setEmailVerificationToken($verificationToken);
+
             $entityManager->persist($user);
             $entityManager->flush();
 
             // generate a signed url and email it to the user
-            $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
+            $this->emailVerifier->sendEmailConfirmation('app_verify_email',$user,
                 (new TemplatedEmail())
                     ->from(new Address('registration@siteweb.com', 'name_de_email_de_registration'))
-                    ->to((string) $user->getEmail())
+                    ->to($user->getEmail())
                     ->subject('Please Confirm your Email')
                     ->htmlTemplate('registration/confirmation_email.html.twig')
+                    ->context([
+                        'user' => $user,
+                        'token' => $verificationToken // Pass the token to the email template 
+                    ])
             );
-
-            // do anything else you need here, like send an email
-
-            return $this->redirectToRoute('app_user');
+            // Automatically log the user in after registration
+            return $userAuthenticator->authenticateUser(
+            $user,
+            $authenticator,
+            $request
+            );
+            return $this->redirectToRoute('app_home');
         }
-
         return $this->render('registration/register.html.twig', [
             'registrationForm' => $form,
         ]);
@@ -77,6 +95,6 @@ class RegistrationController extends AbstractController
         // @TODO Change the redirect on success and handle or remove the flash message in your templates
         $this->addFlash('success', 'Your email address has been verified.');
 
-        return $this->redirectToRoute('app_register');
+        return $this->redirectToRoute('app_home');
     }
 }

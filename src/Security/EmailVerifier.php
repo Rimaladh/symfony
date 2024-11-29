@@ -42,9 +42,24 @@ class EmailVerifier
      */
     public function handleEmailConfirmation(Request $request, User $user): void
     {
+
+        // Get the token from the request (URL)
+        $token = $request->query->get('token');
+
         $this->verifyEmailHelper->validateEmailConfirmationFromRequest($request, (string) $user->getId(), (string) $user->getEmail());
 
+       
+
+        // Check if the token matches the one stored for this user
+        if ($user->getEmailVerificationToken() !== $token) {
+            throw new VerifyEmailExceptionInterface('invalid_token');
+        }
+
+        // Mark the user as verified
         $user->setVerified(true);
+
+        // Remove the token from the database (optional)
+        $user->setEmailVerificationToken(null);
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();

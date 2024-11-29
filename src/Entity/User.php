@@ -33,10 +33,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
+
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $emailVerificationToken;
+
+
+
     #[ORM\Column(length: 50)]
     private ?string $nom = null;
 
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(length: 8)]
     private ?string $telephone = null;
 
     
@@ -143,6 +151,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setTelephone(string $telephone): static
     {
         $this->telephone = $telephone;
+
+        return $this;
+    }
+
+
+    public function getEmailVerificationToken(): ?string
+    {
+        return $this->emailVerificationToken;
+    }
+
+    public function setEmailVerificationToken(?string $token): self
+    {
+        $this->emailVerificationToken = $token;
 
         return $this;
     }
