@@ -118,10 +118,13 @@ class ResetPasswordController extends AbstractController
             $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
             $this->entityManager->flush();
 
+            // Add a success flash message
+            $this->addFlash('success', 'Votre mot de passe a été réinitialisé avec succès.');
+
             // The session is cleaned up after the password has been changed.
             $this->cleanSessionAfterReset();
 
-            return $this->redirectToRoute('app_login');
+            return $this->redirectToRoute('app_home');
         }
 
         return $this->render('reset_password/reset.html.twig', [
