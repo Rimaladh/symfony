@@ -43,6 +43,7 @@ class RegistrationController extends AbstractController
 
             // encode the plain password
             $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
+            $user->setRoles(['ROLE_USER']);
 
             // Generate a unique token for email verification
             $verificationToken = bin2hex(random_bytes(32)); // Generates a random 32-byte token
